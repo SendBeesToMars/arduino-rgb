@@ -1,20 +1,22 @@
+
+
 /*
-Hello World.ino
-2013 Copyright (c) Seeed Technology Inc. All right reserved.
-Author:Loovee
-2013-9-18
-Grove - Serial LCD RGB Backlight demo.
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-Lesser General Public License for more details.
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+  Hello World.ino
+  2013 Copyright (c) Seeed Technology Inc. All right reserved.
+  Author:Loovee
+  2013-9-18
+  Grove - Serial LCD RGB Backlight demo.
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  Lesser General Public License for more details.
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include <Wire.h>
 #include <rgb_lcd.h>
@@ -24,12 +26,12 @@ const int colorG = 255;
 const int colorB = 0;
 const int pinLight = A0;
 const int pinLed   = 7;
-int thresholdvalue=400;  //the threshold to turn on or off the LED
+int thresholdvalue = 400; //the threshold to turn on or off the LED
 const int minButton = 3; // pin of button define here
 const int hrButton = 4; // pin of button define here
-const int speakerPin = 8; 
-
-const int potentiometer = A1; 
+const int speakerPin = 8;
+bool alarmOn=false;
+const int potentiometer = A1;
 
 
 int length = 15; // the number of notes
@@ -39,155 +41,185 @@ int tempo = 300;
 
 void setup()
 {
-    pinMode(speakerPin, OUTPUT);
-    pinMode(minButton, INPUT); // set button INPUT
-    pinMode(hrButton, INPUT); // set button INPUT
-    Serial.begin(9600);
-    pinMode(pinLed, OUTPUT);             //set the LED on Digital 12 as an OUTPUT
-    delay(1000);
+  pinMode(speakerPin, OUTPUT);
+  pinMode(minButton, INPUT); // set button INPUT
+  pinMode(hrButton, INPUT); // set button INPUT
+  Serial.begin(9600);
+  pinMode(pinLed, OUTPUT);             //set the LED on Digital 12 as an OUTPUT
+  delay(1000);
   lcd.begin(16, 2);
   lcd.setRGB(colorR, colorG, colorB);
   delay(1000);
-  lcd.display();  
+  lcd.display();
   // Print a message to the LCD.
   lcd.print("Enter time on ");
   lcd.setCursor(0, 1);
   lcd.print("serial Monitor:");
   delay(1000);
-  
+
   pinMode(potentiometer, INPUT);
 }
-int seconds=0, minutes=0, hours=0;
-int  minutesAlarm=0, hoursAlarm=0;
+int seconds = 0, minutes = 0, hours = 0;
+int  minutesAlarm = 0, hoursAlarm = 0;
+
 void loop()
 {
   getTime();
   getAlarm();
-   while(1)
-      {
-                int value = analogRead(potentiometer);
-                //Serial.println(value);                      // pirnt the value on the serial monitor screen
-                lcd.setPWM(REG_RED,value*0.25);
-                    delay(1000);                //950 millisecond delay
-                int sensorValue = analogRead(pinLight);    //the light sensor is attached to analog 0
-                if(sensorValue<thresholdvalue)
-                {
-                    //digitalWrite(pinLed, HIGH);
-                    lcd.setPWM(REG_RED,255);
-                    lcd.setPWM(REG_GREEN,0);
-                    lcd.setPWM(REG_BLUE,0);
-                }
-                else
-                {
-                   // digitalWrite(pinLed, LOW);
-                    lcd.setPWM(REG_GREEN,255);
-                }
-          if(seconds<59)
-              seconds++;                    //increment until seconds = 59
-          else
-          {
-              seconds = 0;                //reset to 0 when seconds = 60
-              if (minutes<59)
-                  minutes++;                //increment until minutes = 59
-              else
-              {
-                  minutes = 0;           //reset to 0 when minutes = 60
-                  if (hours<23)
-                      hours++;           //increment until hours = 23
-                  else
-                      hours = 0;           //reset to 0 when hours = 24
-              }    
-          }         
-          if(digitalRead(minButton)) // when button is pressed
-          {
-              if(minutes<59)    
-                  minutes++;                //increment if minutes are less than 59  
-              else
-              {
-                  minutes = 0;            //reset minutes                
-              }
-          }
-          if(digitalRead(hrButton)) // when button is pressed
-          {
-              if(hours<23)
-                  hours++;                   //increment hours
+  int sensorValue;
   
-              else
-                  hours = 0;               //reset hours
-          }
-          lcd.setCursor(0, 1);
-          // 0x30 is added to each character value so that the output is in the range 0-9
-                if(hours<=9)
-                    lcd.print(0);    
-                lcd.print(hours);
-          lcd.print(":");
-                if(minutes<=9)
-                    lcd.print(0);    
-          lcd.print(minutes);//write 10s of minutes to screen
-          lcd.print(':');
-                if(seconds<=9)
-                    lcd.print(0);    
-          lcd.print(seconds);//write 10s of seconds to screen
-     if(hours==hoursAlarm && minutes==minutesAlarm)
-      {
-        digitalWrite(pinLed, HIGH);
-        if(sensorValue<thresholdvalue)
-          {
-            digitalWrite(pinLed, LOW);
-            minutesAlarm++;
-          }
-      }    
+
+  while (1)
+  {
+    int value = analogRead(potentiometer);
+    //Serial.println(value);                      // pirnt the value on the serial monitor screen
+    lcd.setPWM(REG_RED, value * 0.25);
+    delay(1000);                //950 millisecond delay
+    sensorValue = analogRead(pinLight);    //the light sensor is attached to analog 0
+    if (sensorValue < thresholdvalue)
+    {
+      //digitalWrite(pinLed, HIGH);
+      lcd.setPWM(REG_RED, 255);
+      lcd.setPWM(REG_GREEN, 0);
+      lcd.setPWM(REG_BLUE, 0);
+    }
+    else
+    {
+      // digitalWrite(pinLed, LOW);
+      lcd.setPWM(REG_GREEN, 255);
+    }
+    if (seconds < 59)
+      seconds++;                    //increment until seconds = 59
+    else
+    {
+      seconds = 0;                //reset to 0 when seconds = 60
+      if (minutes < 59)
+        minutes++;                //increment until minutes = 59
       else
-      {    
+      {
+        minutes = 0;           //reset to 0 when minutes = 60
+        if (hours < 23)
+          hours++;           //increment until hours = 23
+        else
+          hours = 0;           //reset to 0 when hours = 24
+      }
+    }
+    if (!alarmOn && digitalRead(minButton)) // when button is pressed
+    {
+      if (minutes < 59)
+        minutes++;                //increment if minutes are less than 59
+      else
+      {
+        minutes = 0;            //reset minutes
+      }
+    }
+    if (digitalRead(hrButton)) // when button is pressed
+    {
+      if (hours < 23)
+        hours++;                   //increment hours
+
+      else
+        hours = 0;               //reset hours
+    }
+    lcd.setCursor(0, 0);
+    // 0x30 is added to each character value so that the output is in the range 0-9
+    if (hours <= 9)
+      lcd.print(0);
+    lcd.print(hours);
+    lcd.print(":");
+    if (minutes <= 9)
+      lcd.print(0);
+    lcd.print(minutes);//write 10s of minutes to screen
+    lcd.print(':');
+    if (seconds <= 9)
+      lcd.print(0);
+    lcd.print(seconds);//write 10s of seconds to screen
+
+
+    lcd.setCursor(0, 1);
+    // 0x30 is added to each character value so that the output is in the range 0-9
+    if (hoursAlarm <= 9)
+      lcd.print(0);
+    lcd.print(hoursAlarm);
+    lcd.print(":");
+    if (minutesAlarm <= 9)
+      lcd.print(0);
+    lcd.print(minutesAlarm);//write 10s of minutes to screen
+
+    if (hours == hoursAlarm && minutes == minutesAlarm)
+    {
+      alarmOn = true;
+    }
+    else
+    {
+      alarmOn = false;
+    }
+
+    if ( alarmOn==true )
+    {
+      digitalWrite(pinLed, HIGH);
+      if (sensorValue < thresholdvalue)
+      {
         digitalWrite(pinLed, LOW);
+        minutesAlarm++;
       }
+
+      if ( digitalRead(minButton) && alarmOn==true )
+      {
+        alarmOn = false;
+        digitalWrite(pinLed, LOW);
+        minutesAlarm--;
       }
-   
-  
+    }
+  }
+
 }
+
 void getTime()
 {
-    Serial.write("Enter hours as xx: ");
-    // read all the available characters
-    while(!Serial.available());     
-    if(Serial.available() > 0) 
-        hours= ((Serial.read()-0x30)*10);
-    while(!Serial.available());
-    if(Serial.available() > 0) 
-        hours += ((Serial.read()-0x30));        
+  Serial.write("Enter hours as xx: ");
+  // read all the available characters
+  while (!Serial.available());
+  if (Serial.available() > 0)
+    hours = ((Serial.read() - 0x30) * 10);
+  while (!Serial.available());
+  if (Serial.available() > 0)
+    hours += ((Serial.read() - 0x30));
 
-   Serial.write("Enter mins as xx: ");
-   while(!Serial.available());
-    // read all the available characters
+  Serial.write("Enter mins as xx: ");
+  while (!Serial.available());
+  // read all the available characters
 
-    if(Serial.available() > 0) 
-        minutes= ((Serial.read()-0x30)*10);
-    while(!Serial.available());
-    if(Serial.available() > 0) 
-        minutes += ((Serial.read()-0x30));
-      // clear the screen
-    lcd.clear();
+  if (Serial.available() > 0)
+    minutes = ((Serial.read() - 0x30) * 10);
+  while (!Serial.available());
+  if (Serial.available() > 0)
+    minutes += ((Serial.read() - 0x30));
+  // clear the screen
+  lcd.clear();
 }
 void getAlarm()
 {
   Serial.write("Enter Alarm hours as xx: ");
-  while(!Serial.available());     
-    if(Serial.available() > 0) 
-        hoursAlarm= ((Serial.read()-0x30)*10);
-    while(!Serial.available());
-    if(Serial.available() > 0) 
-        hoursAlarm += ((Serial.read()-0x30)); 
-         
-   Serial.write("Enter Alarm mins as xx: ");
-   while(!Serial.available());
-    // read all the available characters
+  while (!Serial.available());
+  if (Serial.available() > 0)
+    hoursAlarm = ((Serial.read() - 0x30) * 10);
+  while (!Serial.available());
+  if (Serial.available() > 0)
+    hoursAlarm += ((Serial.read() - 0x30));
 
-    if(Serial.available() > 0) 
-        minutesAlarm= ((Serial.read()-0x30)*10);
-    while(!Serial.available());
-    if(Serial.available() > 0) 
-        minutesAlarm += ((Serial.read()-0x30));
-      // clear the screen
-    lcd.clear(); 
+  Serial.write("Enter Alarm mins as xx: ");
+  while (!Serial.available());
+  // read all the available characters
+
+  if (Serial.available() > 0)
+    minutesAlarm = ((Serial.read() - 0x30) * 10);
+  while (!Serial.available());
+  if (Serial.available() > 0)
+    minutesAlarm += ((Serial.read() - 0x30));
+  // clear the screen
+  lcd.clear();
 
 }
+
+
