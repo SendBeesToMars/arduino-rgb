@@ -20,7 +20,7 @@
 */
 #include <Wire.h>
 #include <rgb_lcd.h>
-rgb_lcd lcd;
+rgb_lcd lcd;  //pin IC2
 const int colorR = 255;
 const int colorG = 255;
 const int colorB = 0;
