@@ -41,7 +41,7 @@ int tempo = 300;
 
 void setup()
 {
-  pinMode(speakerPin, OUTPUT);
+  pinMode(speakerPin, OUTPUT); // this code is shit
   pinMode(minButton, INPUT); // set button INPUT
   pinMode(hrButton, INPUT); // set button INPUT
   Serial.begin(9600);
